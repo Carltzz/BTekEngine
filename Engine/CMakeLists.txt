@@ -1,0 +1,8 @@
+cmake_minimum_required (VERSION 3.8)
+
+set(ENGINE_SOURCES
+	${CMAKE_CURRENT_SOURCE_DIR}/Engine.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/Engine.h
+	PARENT_SCOPE)
+
+message(GOT HERE ${ENGINE_SOURCES})
