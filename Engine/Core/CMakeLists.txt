@@ -1,0 +1,8 @@
+cmake_minimum_required (VERSION 3.8)
+
+set(CORE_SOURCES
+	${CMAKE_CURRENT_SOURCE_DIR}/MSWindow.h
+	${CMAKE_CURRENT_SOURCE_DIR}/MSWindow.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Window.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/Window.h
+	PARENT_SCOPE)
