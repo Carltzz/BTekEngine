@@ -1,4 +1,5 @@
 #pragma once
+#include "Util/Logger.h"
 
 #if defined(_MSC_VER)
 	#define EXPORT __declspec(dllexport)
@@ -13,5 +14,6 @@
 #endif
 
 extern "C" {
-	__declspec(dllexport) void InitialiseEngine();
+	EXPORT void InitialiseEngine();
+	EXPORT void BTekLogMessage(BTekEngine::LogLevel level, const std::string& msg, ...);
 }

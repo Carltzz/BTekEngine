@@ -25,3 +25,4 @@ add_executable(BTekSnake ${SNAKE_SOURCES})
 
 target_link_libraries(BTekSnake BTekEngine)
 target_include_directories(BTekSnake PRIVATE Engine)
+target_include_directories(BTekEngine PRIVATE Engine)

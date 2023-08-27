@@ -1,19 +1,28 @@
 #include "Engine.h"
-#include "Core/MSWindow.h"
 #include <iostream>
+#include "Graphics/Platform/Window.h"
+#include "Util/ConsoleLogger.h"
 
-Window* InitPlatform();
+using namespace BTekEngine;
 
-void InitialiseEngine() {
-	Window* window = InitPlatform();
-	window->Run();
-	delete window;
+ConsoleLogger* logger;
+Window* window;
+
+void BTekLogMessage(LogLevel logLevel, const std::string& msg, ...) {
+	logger->Log(logLevel, std::string(msg));
+}
+
+void InitialiseDebugging() {
+	logger = new ConsoleLogger();
+	BTekLogMessage(LogLevel::INFO, "Initialised the logger");
 }
 
 #ifdef _WIN32
-Window* InitPlatform() {
+#include "Graphics/Platform/MSWindow.h"
+void InitPlatform() {
 	BTekEngine::RegisterWindowClass();
-	return new BTekEngine::MSWindow("BTeKEngine", 1280, 720);
+	window = new BTekEngine::MSWindow("BTeKEngine", 1280, 720);
+	BTekLogMessage(LogLevel::INFO, "Initialised platform (using windows)");
 }
 #else
 Window* InitPlatform() {
@@ -21,3 +30,19 @@ Window* InitPlatform() {
 	return NULL;
 }
 #endif
+
+void Start() {
+	window->Run(GraphicsApiType::OpenGL);
+}
+
+void CleanUp() {
+	delete window;
+	delete logger;
+}
+
+void InitialiseEngine() {
+	InitialiseDebugging();
+	InitPlatform();
+	Start();
+	CleanUp();
+}

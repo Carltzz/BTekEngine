@@ -1,7 +1,10 @@
 #ifdef _WIN32
 #include "MSWindow.h"
+#include "Graphics/OpenGLApi.h"
 
 const LPCSTR BTEK_CLASS_NAME = "BTekWindow";
+
+using namespace BTekEngine;
 
 struct WindowState {
 	Window* window;
@@ -21,24 +24,29 @@ LRESULT CALLBACK BTekWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 	}
 	
 	switch (uMsg) {
+		case WM_CREATE: {
+			pState->window->InitGraphicsApi(hWnd);
+			break;
+		}
 		case WM_PAINT: {
 			PAINTSTRUCT ps;
 			HDC hdc = BeginPaint(hWnd, &ps);
-			FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW));
 			EndPaint(hWnd, &ps);
-			return 0;
+			break;
 		}
 		case WM_CLOSE: {
 			DestroyWindow(hWnd);
-			return 0;
+			break;
     	}
 		case WM_DESTROY: {
 			PostQuitMessage(0);
-			return 0;
+			break;
 		}
+		default:
+			return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 	
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+	return 0;
 };
 
 HWND BTekCreateWindow(Window* window) {
@@ -76,19 +84,38 @@ BTekEngine::MSWindow::MSWindow(const char* title, int width, int height) {
 	m_height = height;
 }
 
-WIN_RETURN_STATUS BTekEngine::MSWindow::Run() {
-	m_hWnd = BTekCreateWindow(this);
+WIN_RETURN_STATUS BTekEngine::MSWindow::Run(GraphicsApiType api) {
+	m_gfxApiType = api;
+	BTekCreateWindow(this);
+
+	HDC deviceContext = GetDC(m_hWnd);
 
 	if (!m_hWnd) {
 		return WIN_RUN_ERROR;
 	}
 
 	ShowWindow(m_hWnd, SW_SHOW);
+	Vector3<double> start = { 0, 0, 0 }, end = { 50, 50, 0 };
 
 	MSG msg = { };
-	while (GetMessage(&msg, NULL, 0, 0)) {
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+	bool quit = false;
+	while (true) {
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			if (msg.message == WM_QUIT) {
+				quit = true;
+				break;
+			}
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+
+		if (quit) break;
+		
+		m_gfxApi->ClearBuffers();
+		m_gfxApi->PrepareRender();
+		m_gfxApi->DrawRectangle(start, end);
+		m_gfxApi->FinishRender();
+		SwapBuffers(deviceContext);
 	}
 
 	return WIN_RUN_OK;
@@ -104,6 +131,18 @@ void BTekEngine::MSWindow::SetTitle(const char* newTitle) {
 	if (m_hWnd) {
 		SetWindowText(m_hWnd, newTitle);
 	}
+}
+
+HWND BTekEngine::MSWindow::GetHWnd() {
+	return m_hWnd;
+}
+
+void BTekEngine::MSWindow::InitGraphicsApi(void* hWnd) {
+	m_hWnd = (HWND)hWnd;
+	m_gfxApi = BTekEngine::CreateGraphicsApi(this, m_gfxApiType);
+	m_gfxApi->Init();
+	m_gfxApi->SetClearColor(0.0, 1.0, 0.0);
+	m_gfxApi->SetViewport(0, 0, m_width, m_height);
 }
 
 #endif

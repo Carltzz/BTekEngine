@@ -7,11 +7,15 @@ namespace BTekEngine {
 	class MSWindow : public Window {
 	public:
 		MSWindow(const char* title, int width, int height);
+		
+		HWND GetHWnd();
+		void InitGraphicsApi(void* hWnd) override;
 
 		void SetSize(int width, int height) override;
 		void SetTitle(const char* newTitle) override;
 
-		WIN_RETURN_STATUS Run() override;
+		WIN_RETURN_STATUS Run(GraphicsApiType api) override;
+
 	private:
 		HWND m_hWnd = NULL;
 	};
