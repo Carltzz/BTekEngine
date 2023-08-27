@@ -17,8 +17,16 @@ namespace BTekEngine {
 
 		int CreateVertexBuffer(int sizeInBytes, void* data) override;
 		void DeleteVertexBuffer(int id) override;
-		virtual int CreateIndexBuffer(int sizeInBytes, void* data) override;
-		virtual void DeleteIndexBuffer(int id) override;
+		int CreateIndexBuffer(int sizeInBytes, void* data) override;
+		void DeleteIndexBuffer(int id) override;
+
+		int CreateShader();
+		int CreateShaderStage(ShaderType shaderType);
+		bool CompileShaderStage(int id, const char* src);
+		bool CompileShader(int id, ShaderDescriptor desc);
+		void ActivateShader(int id);
+		void DeleteShaderStage(int id);
+		void DeleteShader(int id);
 		
 		int AllocateMesh() override;
 		void DeallocateMesh(int meshId) override;

@@ -16,6 +16,24 @@ namespace BTekEngine {
 		NORMAL
 	};
 
+	enum class ShaderType {
+		Vertex,
+		Hull,
+		Domain,
+		Geometry,
+		Pixel,
+		Compute
+	};
+
+	struct ShaderDescriptor {
+		int VertexShader = -1;
+		int HullShader = -1;
+		int DomainShader = -1;
+		int GeometryShader = -1;
+		int PixelShader = -1;
+		int ComputeShader = -1;
+	};
+
 	struct MeshAttribDescriptor {
 		int BufferId;
 		MeshAttribute Attribute;
@@ -49,6 +67,15 @@ namespace BTekEngine {
 		virtual void DeleteVertexBuffer(int id) = 0;
 		virtual int CreateIndexBuffer(int sizeInBytes, void* data) = 0;
 		virtual void DeleteIndexBuffer(int id) = 0;
+
+		virtual int CreateShader() = 0;
+		virtual int CreateShaderStage(ShaderType shaderType) = 0;
+		virtual bool CompileShaderStage(int id, const char* src) = 0;
+		virtual bool CompileShader(int id, ShaderDescriptor desc) = 0;
+		virtual void ActivateShader(int id) = 0;
+		virtual void DeleteShaderStage(int id) = 0;
+		virtual void DeleteShader(int id) = 0;
+		virtual void LoadCoreShaders() = 0;
 
 	protected:
 		void* m_pWindow;

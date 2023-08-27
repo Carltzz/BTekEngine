@@ -1,12 +1,25 @@
 #include "OpenGLApi.h"
 #include "Engine.h"
 #include "Util/Logger.h"
+#include "Shader.h"
+#include <map>
 
 #ifdef _WIN32
 #include <Windows.h>
 #include <GL/glew.h>
 #else
 #endif
+
+BTekEngine::Shader* shader;
+
+const std::map<BTekEngine::ShaderType, GLenum> shader_enums = {
+	{ BTekEngine::ShaderType::Vertex, GL_VERTEX_SHADER },
+	{ BTekEngine::ShaderType::Hull, GL_TESS_CONTROL_SHADER },
+	{ BTekEngine::ShaderType::Domain, GL_TESS_EVALUATION_SHADER },
+	{ BTekEngine::ShaderType::Geometry, GL_GEOMETRY_SHADER },
+	{ BTekEngine::ShaderType::Pixel, GL_FRAGMENT_SHADER },
+	{ BTekEngine::ShaderType::Compute, GL_COMPUTE_SHADER }
+};
 
 void BTekEngine::OpenGLApi::DrawRectangle(Vector3<double> Start, Vector3<double> End) {
 	float sx = (float)Start.X;
@@ -60,56 +73,14 @@ const char* fragmentShaderSource = "#version 330 core\n"
 	"	FragColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n"
 "}\0";
 
-unsigned int defaultVertexShader;
-unsigned int defaultFragmentShader;
-unsigned int defaultShaderProgram;
-
 void BTekEngine::OpenGLApi::LoadCoreShaders() {
-	defaultVertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(defaultVertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(defaultVertexShader);
+	shader = new Shader("DefaultShader");
+	shader->SetVertexStage(vertexShaderSource);
+	shader->SetPixelStage(fragmentShaderSource);
+	bool success = shader->Compile();
+	shader->Activate();
 
-	int success;
-	char infoLog[512];
-	glGetShaderiv(defaultVertexShader, GL_COMPILE_STATUS, &success);
-
-	if (!success) {
-		glGetShaderInfoLog(defaultVertexShader, 512, NULL, infoLog);
-		BTekLogMessage(BTekEngine::LogLevel::CRITICAL, "Failed to load default vertex shader.");
-		BTekLogMessage(BTekEngine::LogLevel::CRITICAL, infoLog);
-	}
-
-	defaultFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(defaultFragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(defaultFragmentShader);
-	
-	glGetShaderiv(defaultFragmentShader, GL_COMPILE_STATUS, &success);
-
-	if (!success) {
-		glGetShaderInfoLog(defaultFragmentShader, 512, NULL, infoLog);
-		BTekLogMessage(BTekEngine::LogLevel::CRITICAL, "Failed to load default fragment shader.");
-		BTekLogMessage(BTekEngine::LogLevel::CRITICAL, infoLog);
-	}
-
-	defaultShaderProgram = glCreateProgram();
-	glAttachShader(defaultShaderProgram, defaultVertexShader);
-	glAttachShader(defaultShaderProgram, defaultFragmentShader);
-	glLinkProgram(defaultShaderProgram);
-
-	glGetProgramiv(defaultShaderProgram, GL_LINK_STATUS, &success);
-
-	if (!success) {
-		glGetProgramInfoLog(defaultShaderProgram, 512, NULL, infoLog);
-		BTekLogMessage(BTekEngine::LogLevel::CRITICAL, "Failed to link default shader program.");
-		BTekLogMessage(BTekEngine::LogLevel::CRITICAL, infoLog);
-	}
-
-	glUseProgram(defaultShaderProgram);
-
-	glDeleteShader(defaultVertexShader);
-	glDeleteShader(defaultFragmentShader);
-
-	BTekLogMessage(BTekEngine::LogLevel::INFO, "Finished loading shaders.");
+	if (success) BTekLogMessage(BTekEngine::LogLevel::INFO, "Finished loading shaders.");
 }
 
 int BTekEngine::OpenGLApi::AllocateMesh() {
@@ -167,7 +138,71 @@ void BTekEngine::OpenGLApi::DeleteIndexBuffer(int id) {
 	glDeleteBuffers(1, &glId);
 }
 
+int BTekEngine::OpenGLApi::CreateShader() {
+	return glCreateProgram();
+}
+
+int BTekEngine::OpenGLApi::CreateShaderStage(ShaderType shaderType) {
+	return glCreateShader(shader_enums.at(shaderType));
+}
+
+bool BTekEngine::OpenGLApi::CompileShaderStage(int id, const char* src) {
+	glShaderSource(id, 1, &src, NULL);
+	glCompileShader(id);
+
+	char infoLog[512];
+	int success;
+
+	glGetShaderiv(id, GL_COMPILE_STATUS, &success);
+
+	if (!success) {
+		glGetShaderInfoLog(id, 512, NULL, infoLog);
+		BTekLogMessage(BTekEngine::LogLevel::ERR, "Failed to load fragment shader id:", id);
+		BTekLogMessage(BTekEngine::LogLevel::ERR, infoLog);
+	}
+
+	return success;
+}
+
+void compileShader_attachShader(int programId, int shaderId) {
+	if (shaderId != -1) glAttachShader(programId, shaderId);
+}
+
+bool BTekEngine::OpenGLApi::CompileShader(int shaderId, ShaderDescriptor desc) {
+	compileShader_attachShader(shaderId, desc.VertexShader);
+	compileShader_attachShader(shaderId, desc.HullShader);
+	compileShader_attachShader(shaderId, desc.DomainShader);
+	compileShader_attachShader(shaderId, desc.GeometryShader);
+	compileShader_attachShader(shaderId, desc.PixelShader);
+	compileShader_attachShader(shaderId, desc.ComputeShader);
+
+	glLinkProgram(shaderId);
+
+	char infoLog[512];
+	int success;
+	glGetProgramiv(shaderId, GL_LINK_STATUS, &success);
+
+	if (!success) {
+		glGetProgramInfoLog(shaderId, 512, NULL, infoLog);
+		BTekLogMessage(BTekEngine::LogLevel::ERR, "Failed to link default shader program: ", shaderId);
+		BTekLogMessage(BTekEngine::LogLevel::ERR, infoLog);
+	}
+
+	return success;
+}
+
+void BTekEngine::OpenGLApi::ActivateShader(int id) {
+	glUseProgram(id);
+}
+
+void BTekEngine::OpenGLApi::DeleteShaderStage(int id) {
+	glDeleteShader(id);
+}
+
+void BTekEngine::OpenGLApi::DeleteShader(int id) {
+	glDeleteShader(id);
+}
+
 void BTekEngine::OpenGLApi::CleanUp() {
 	glUseProgram(0);
-	glDeleteProgram(defaultShaderProgram);
 }

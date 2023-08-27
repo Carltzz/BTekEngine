@@ -38,8 +38,6 @@ void OpenGLApiWindows::Init() {
 	if (glewInitResult == GLEW_OK) {
 		BTekLogMessage(LogLevel::INFO, "Successfully loaded GLEW");
 	}
-
-	LoadCoreShaders();
 }
 
 #endif

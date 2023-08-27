@@ -24,6 +24,7 @@ void InitPlatform() {
 	BTekEngine::RegisterWindowClass();
 	window = new BTekEngine::MSWindow(GraphicsApiType::OpenGL, "BTeKEngine", 1280, 720);
 	api = window->GetGraphicsApi();
+	api->LoadCoreShaders();
 	BTekLogMessage(LogLevel::INFO, "Initialised platform (using windows)");
 }
 #else
