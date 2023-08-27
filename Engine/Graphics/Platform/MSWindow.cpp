@@ -1,6 +1,8 @@
 #ifdef _WIN32
 #include "MSWindow.h"
 #include "Graphics/OpenGLApi.h"
+#include <Graphics/Mesh.h>
+#include <Graphics/IndexBuffer.h>
 
 const LPCSTR BTEK_CLASS_NAME = "BTekWindow";
 
@@ -78,16 +80,15 @@ WIN_RETURN_STATUS BTekEngine::RegisterWindowClass() {
 	return WIN_RUN_OK;
 }
 
-BTekEngine::MSWindow::MSWindow(const char* title, int width, int height) {
+BTekEngine::MSWindow::MSWindow(GraphicsApiType api, const char* title, int width, int height) {
 	m_title = title;
 	m_width = width;
 	m_height = height;
-}
-
-WIN_RETURN_STATUS BTekEngine::MSWindow::Run(GraphicsApiType api) {
 	m_gfxApiType = api;
 	BTekCreateWindow(this);
+}
 
+WIN_RETURN_STATUS BTekEngine::MSWindow::Run() {
 	HDC deviceContext = GetDC(m_hWnd);
 
 	if (!m_hWnd) {
@@ -95,7 +96,26 @@ WIN_RETURN_STATUS BTekEngine::MSWindow::Run(GraphicsApiType api) {
 	}
 
 	ShowWindow(m_hWnd, SW_SHOW);
-	Vector3<double> start = { 0, 0, 0 }, end = { 50, 50, 0 };
+
+	Vector3<float> vertices[] = {
+		{ -0.5f, -0.5f, 0.0f },
+		{ 0.5f , -0.5f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+	};
+
+	int indices[] = { 0, 1, 2 };
+
+	VertexBuffer* vertexBuffer = new VertexBuffer(sizeof(vertices), &vertices[0], 3);
+	IndexBuffer* indexBuffer = new IndexBuffer(sizeof(indices), &indices[0], 3);
+	StaticMesh* mesh = new StaticMesh();
+	MeshAttribDescriptor vertexBufferDesc = {
+		vertexBuffer->GetID(),
+		MeshAttribute::POSITION,
+		3, 0, 3
+	};
+
+	mesh->SetVertices(vertexBuffer, vertexBufferDesc);
+	mesh->SetIndices(indexBuffer);
 
 	MSG msg = { };
 	bool quit = false;
@@ -113,7 +133,7 @@ WIN_RETURN_STATUS BTekEngine::MSWindow::Run(GraphicsApiType api) {
 		
 		m_gfxApi->ClearBuffers();
 		m_gfxApi->PrepareRender();
-		m_gfxApi->DrawRectangle(start, end);
+		mesh->Render();
 		m_gfxApi->FinishRender();
 		SwapBuffers(deviceContext);
 	}

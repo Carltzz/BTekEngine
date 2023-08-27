@@ -7,6 +7,7 @@ using namespace BTekEngine;
 
 ConsoleLogger* logger;
 Window* window;
+GraphicsApi* api;
 
 void BTekLogMessage(LogLevel logLevel, const std::string& msg, ...) {
 	logger->Log(logLevel, std::string(msg));
@@ -21,7 +22,8 @@ void InitialiseDebugging() {
 #include "Graphics/Platform/MSWindow.h"
 void InitPlatform() {
 	BTekEngine::RegisterWindowClass();
-	window = new BTekEngine::MSWindow("BTeKEngine", 1280, 720);
+	window = new BTekEngine::MSWindow(GraphicsApiType::OpenGL, "BTeKEngine", 1280, 720);
+	api = window->GetGraphicsApi();
 	BTekLogMessage(LogLevel::INFO, "Initialised platform (using windows)");
 }
 #else
@@ -32,7 +34,7 @@ Window* InitPlatform() {
 #endif
 
 void Start() {
-	window->Run(GraphicsApiType::OpenGL);
+	window->Run();
 }
 
 void CleanUp() {
@@ -45,4 +47,8 @@ void InitialiseEngine() {
 	InitPlatform();
 	Start();
 	CleanUp();
+}
+
+void* GetGraphicsApi() {
+	return api;
 }

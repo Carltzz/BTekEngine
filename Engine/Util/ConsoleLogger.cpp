@@ -9,7 +9,7 @@ const std::map<LogLevel, std::string> log_prefixes = {
 	{LogLevel::DEBUG, "[DEBUG] "},
 	{LogLevel::INFO, "[INFO] "},
 	{LogLevel::WARNING, "[WARNING] "},
-	{LogLevel::ERROR, "[ERROR] "},
+	{LogLevel::ERR, "[ERROR] "},
 	{LogLevel::CRITICAL, "[CRITICAL] "},
 	{LogLevel::FATAL, "[FATAL] "}
 };

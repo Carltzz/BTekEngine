@@ -19,15 +19,16 @@ namespace BTekEngine {
 
 		WindowSize GetSize();
 		std::string GetTitle();
-		GraphicsApi* GetGraphicsApi();
+		
 		virtual void InitGraphicsApi(void* nativeHandle) = 0;
+		GraphicsApi* GetGraphicsApi();
 
 		virtual void SetTitle(const char* newTitle) = 0;
 		virtual void SetSize(int width, int height) = 0;
 		virtual void SetSize(WindowSize size);
 
-		virtual WIN_RETURN_STATUS Run(GraphicsApiType api) = 0;
-
+		virtual WIN_RETURN_STATUS Run() = 0;
+		
 	protected:
 		// The title of the window
 		const char* m_title = 0;

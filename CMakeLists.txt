@@ -16,13 +16,19 @@ endif()
 # endif()
 
 # TODO: Add tests and install targets if needed.
+set(CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/lib/glew-2.2.0" ${CMAKE_PREFIX_PATH})
 
 add_subdirectory(Engine)
 add_subdirectory(Snake)
 
-add_library(BTekEngine SHARED ${ENGINE_SOURCES})
-add_executable(BTekSnake ${SNAKE_SOURCES})
+message(${CMAKE_PREFIX_PATH})
+find_package(GLEW REQUIRED)
 
+add_library(BTekEngine SHARED ${ENGINE_SOURCES})
+target_link_libraries(BTekEngine ${GLEW_LIBRARIES})
+target_include_directories(BTekEngine PRIVATE Engine)
+target_include_directories(BTekEngine PRIVATE ${GLEW_INCLUDE_DIRS})
+
+add_executable(BTekSnake ${SNAKE_SOURCES})
 target_link_libraries(BTekSnake BTekEngine)
 target_include_directories(BTekSnake PRIVATE Engine)
-target_include_directories(BTekEngine PRIVATE Engine)

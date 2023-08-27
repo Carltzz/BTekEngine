@@ -6,7 +6,7 @@ namespace BTekEngine {
 		DEBUG,
 		INFO,
 		WARNING,
-		ERROR,
+		ERR,
 		CRITICAL,
 		FATAL
 	};

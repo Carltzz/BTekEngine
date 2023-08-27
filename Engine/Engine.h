@@ -13,6 +13,8 @@
 	#pragma warning Unsupported compiler
 #endif
 
+void* GetGraphicsApi();
+
 extern "C" {
 	EXPORT void InitialiseEngine();
 	EXPORT void BTekLogMessage(BTekEngine::LogLevel level, const std::string& msg, ...);

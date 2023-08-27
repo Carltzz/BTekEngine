@@ -1,7 +1,8 @@
 #ifdef _WIN32
 #include "OpenGLApiWindows.h"
+#include "Engine.h"
 #include <Windows.h>
-#include <gl/GL.h>
+#include <gl/glew.h>
 
 #pragma comment (lib, "opengl32.lib")
 
@@ -29,9 +30,16 @@ void OpenGLApiWindows::Init() {
 	PIXELFORMATDESCRIPTOR pfd = PIXELFORMATDESCRIPTOR(defaultPfd);
 	int pixelFormat = ChoosePixelFormat(deviceContext, &pfd);
 	SetPixelFormat(deviceContext, pixelFormat, &pfd);
-	
+
 	HGLRC renderContext = wglCreateContext(deviceContext);
 	wglMakeCurrent(deviceContext, renderContext);
+
+	GLenum glewInitResult = glewInit();
+	if (glewInitResult == GLEW_OK) {
+		BTekLogMessage(LogLevel::INFO, "Successfully loaded GLEW");
+	}
+
+	LoadCoreShaders();
 }
 
 #endif
