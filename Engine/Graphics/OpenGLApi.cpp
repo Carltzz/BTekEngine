@@ -68,9 +68,10 @@ const char* vertexShaderSource = "#version 330 core\n"
 
 const char* fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
+"uniform vec4 customColor;\n"
 "void main()\n"
 "{\n"
-	"	FragColor = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n"
+	"	FragColor = customColor;\n"
 "}\0";
 
 void BTekEngine::OpenGLApi::LoadCoreShaders() {
@@ -78,7 +79,11 @@ void BTekEngine::OpenGLApi::LoadCoreShaders() {
 	shader->SetVertexStage(vertexShaderSource);
 	shader->SetPixelStage(fragmentShaderSource);
 	bool success = shader->Compile();
+
 	shader->Activate();
+	int id = shader->AddShaderVariable(ShaderPrimitiveType::VEC4F, "customColor");
+	Vector4<float> colour = { 1.0f, 1.0f, 0.0f, 1.0f };
+	shader->UpdateShaderVariable(id, &colour, 0);
 
 	if (success) BTekLogMessage(BTekEngine::LogLevel::INFO, "Finished loading shaders.");
 }
@@ -203,6 +208,124 @@ void BTekEngine::OpenGLApi::DeleteShader(int id) {
 	glDeleteShader(id);
 }
 
+int BTekEngine::OpenGLApi::DefineShaderVariable(
+	int shaderId,
+	ShaderPrimitiveType type,
+	const std::string& name,
+	int size
+) {
+	GLuint location;
+	if (type == ShaderPrimitiveType::STRUCT) {
+		glGenBuffers(1, &location);
+		glBindBuffer(GL_UNIFORM_BUFFER, location);
+		glBufferData(GL_UNIFORM_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+		int uniformIndex = glGetUniformBlockIndex(shaderId, name.c_str());
+		int bindingIndex;
+		glGetActiveUniformBlockiv(shaderId, uniformIndex, GL_UNIFORM_BLOCK_BINDING, &bindingIndex);
+		glUniformBlockBinding(shaderId, uniformIndex, bindingIndex);
+		glBindBufferBase(GL_UNIFORM_BUFFER, bindingIndex, location);
+	} else {
+		location = glGetUniformLocation(shaderId, name.c_str());
+	}
+	return location;
+}
+
+void BTekEngine::OpenGLApi::UpdateShaderVariable(
+	int shaderId,
+	ShaderPrimitiveType type,
+	int location,
+	void* data,
+	int dstOffset,
+	int size) {
+	switch (type) {
+		case ShaderPrimitiveType::FLOAT: glUniform1f(location, *static_cast<float*>(data));
+		case ShaderPrimitiveType::VEC2F: {
+			float* vec2 = static_cast<float*>(data);
+			glUniform2f(location, vec2[0], vec2[1]);
+		}
+		case ShaderPrimitiveType::VEC3F: {
+			float* vec3 = static_cast<float*>(data);
+			glUniform3f(location, vec3[0], vec3[1], vec3[2]);
+		}
+		case ShaderPrimitiveType::VEC4F: {
+			float* vec4 = static_cast<float*>(data);
+			glUniform4f(location, vec4[0], vec4[1], vec4[2], vec4[3]);
+		}
+
+		case ShaderPrimitiveType::INT: glUniform1i(location, *static_cast<int*>(data));
+		case ShaderPrimitiveType::VEC2I: {
+			int* vec2 = static_cast<int*>(data);
+			glUniform2i(location, vec2[0], vec2[1]);
+		}
+		case ShaderPrimitiveType::VEC3I: {
+			int* vec3 = static_cast<int*>(data);
+			glUniform3i(location, vec3[0], vec3[1], vec3[2]);
+		}
+		case ShaderPrimitiveType::VEC4I: {
+			int* vec4 = static_cast<int*>(data);
+			glUniform4i(location, vec4[0], vec4[1], vec4[2], vec4[3]);
+		}
+
+		case ShaderPrimitiveType::UINT: glUniform1ui(location, *static_cast<int*>(data));
+		case ShaderPrimitiveType::VEC2UI: {
+			int* vec2 = static_cast<int*>(data);
+			glUniform2i(location, vec2[0], vec2[1]);
+		}
+		case ShaderPrimitiveType::VEC3UI: {
+			int* vec3 = static_cast<int*>(data);
+			glUniform3i(location, vec3[0], vec3[1], vec3[2]);
+		}
+		case ShaderPrimitiveType::VEC4UI: {
+			int* vec4 = static_cast<int*>(data);
+			glUniform4i(location, vec4[0], vec4[1], vec4[2], vec4[3]);
+		}
+	}
+
+	if (type == ShaderPrimitiveType::STRUCT) {
+		glBindBuffer(GL_UNIFORM_BUFFER, location);
+		glBufferSubData(GL_UNIFORM_BUFFER, dstOffset, size, data);
+	} else {
+		ShaderPrimitiveType basePrimitive = type > ShaderPrimitiveType::MAT4X4F ? 
+			(ShaderPrimitiveType)((int)type - (int)ShaderPrimitiveType::PFLOAT) : 
+			type;
+		int count = size / GfxGetShaderPrimitiveSize(basePrimitive);
+		switch (type) {
+		case ShaderPrimitiveType::MAT2X2F: glUniformMatrix2fv(location, count, GL_FALSE, static_cast<float*>(data));
+		case ShaderPrimitiveType::MAT2X3F: glUniformMatrix2x3fv(location, count, GL_FALSE, static_cast<float*>(data));
+		case ShaderPrimitiveType::MAT2X4F: glUniformMatrix2x4fv(location, count, GL_FALSE, static_cast<float*>(data));
+		case ShaderPrimitiveType::MAT3X2F: glUniformMatrix3x2fv(location, count, GL_FALSE, static_cast<float*>(data));
+		case ShaderPrimitiveType::MAT3X3F: glUniformMatrix3fv(location, count, GL_FALSE, static_cast<float*>(data));
+		case ShaderPrimitiveType::MAT3X4F: glUniformMatrix3x4fv(location, count, GL_FALSE, static_cast<float*>(data));
+		case ShaderPrimitiveType::MAT4X2F: glUniformMatrix4x2fv(location, count, GL_FALSE, static_cast<float*>(data));
+		case ShaderPrimitiveType::MAT4X3F: glUniformMatrix4x3fv(location, count, GL_FALSE, static_cast<float*>(data));
+		case ShaderPrimitiveType::MAT4X4F: glUniformMatrix4fv(location, count, GL_FALSE, static_cast<float*>(data));
+		case ShaderPrimitiveType::PFLOAT: glUniform1fv(location, count, static_cast<float*>(data)); return;
+		case ShaderPrimitiveType::PVEC2F: glUniform2fv(location, count, static_cast<float*>(data)); return;
+		case ShaderPrimitiveType::PVEC3F: glUniform3fv(location, count, static_cast<float*>(data)); return;
+		case ShaderPrimitiveType::PVEC4F: glUniform4fv(location, count, static_cast<float*>(data)); return;
+		case ShaderPrimitiveType::PINT: glUniform1iv(location, count, static_cast<int*>(data)); return;
+		case ShaderPrimitiveType::PVEC2I: glUniform2iv(location, count, static_cast<int*>(data)); return;
+		case ShaderPrimitiveType::PVEC3I: glUniform3iv(location, count, static_cast<int*>(data)); return;
+		case ShaderPrimitiveType::PVEC4I: glUniform4iv(location, count, static_cast<int*>(data)); return;
+		case ShaderPrimitiveType::PUINT: glUniform1uiv(location, count, static_cast<unsigned int*>(data)); return;
+		case ShaderPrimitiveType::PVEC2UI: glUniform2uiv(location, count, static_cast<unsigned int*>(data)); return;
+		case ShaderPrimitiveType::PVEC3UI: glUniform3uiv(location, count, static_cast<unsigned int*>(data)); return;
+		case ShaderPrimitiveType::PVEC4UI: glUniform4uiv(location, count, static_cast<unsigned int*>(data)); return;
+		}
+	}
+}
+
+void BTekEngine::OpenGLApi::DeleteShaderVariable(
+	ShaderPrimitiveType type,
+	int id
+) {
+	GLuint glId = id;
+	if (type == ShaderPrimitiveType::STRUCT) {
+		glDeleteBuffers(1, &glId);
+	}
+}
+
 void BTekEngine::OpenGLApi::CleanUp() {
 	glUseProgram(0);
+
 }

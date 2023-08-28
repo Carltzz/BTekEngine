@@ -34,6 +34,21 @@ namespace BTekEngine {
 		int ComputeShader = -1;
 	};
 
+	enum class ShaderPrimitiveType {
+		FLOAT, VEC2F, VEC3F, VEC4F,
+		INT, VEC2I, VEC3I, VEC4I,
+		UINT, VEC2UI, VEC3UI, VEC4UI,
+		MAT2X2F, MAT2X3F, MAT2X4F,
+		MAT3X2F, MAT3X3F, MAT3X4F,
+		MAT4X2F, MAT4X3F, MAT4X4F,
+		PFLOAT, PVEC2F, PVEC3F, PVEC4F,
+		PINT, PVEC2I, PVEC3I, PVEC4I,
+		PUINT, PVEC2UI, PVEC3UI, PVEC4UI,
+		STRUCT
+	};
+
+	int GfxGetShaderPrimitiveSize(ShaderPrimitiveType type);
+
 	struct MeshAttribDescriptor {
 		int BufferId;
 		MeshAttribute Attribute;
@@ -76,6 +91,24 @@ namespace BTekEngine {
 		virtual void DeleteShaderStage(int id) = 0;
 		virtual void DeleteShader(int id) = 0;
 		virtual void LoadCoreShaders() = 0;
+
+		virtual int DefineShaderVariable(
+			int shaderId, 
+			ShaderPrimitiveType type, 
+			const std::string& name,
+			int size) = 0;
+
+		virtual void UpdateShaderVariable(
+			int shaderId,
+			ShaderPrimitiveType type, 
+			int location, 
+			void* data, 
+			int dstOffset, 
+			int size) = 0;
+
+		virtual void DeleteShaderVariable(
+			ShaderPrimitiveType type,
+			int id) = 0;
 
 	protected:
 		void* m_pWindow;

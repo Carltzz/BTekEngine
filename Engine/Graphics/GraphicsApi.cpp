@@ -1,4 +1,5 @@
 #include "GraphicsApi.h"
+#include <map>
 
 using namespace BTekEngine;
 
@@ -23,3 +24,21 @@ GraphicsApi* CreateGraphicsApi(void*, GraphicsApiType) {
 	return nullptr;
 }
 #endif
+
+const std::map<BTekEngine::ShaderPrimitiveType, int> shader_var_sizes = {
+	{BTekEngine::ShaderPrimitiveType::FLOAT, 4},
+	{BTekEngine::ShaderPrimitiveType::VEC2F, 8},
+	{BTekEngine::ShaderPrimitiveType::VEC3F, 12},
+	{BTekEngine::ShaderPrimitiveType::VEC4F, 16},
+	{BTekEngine::ShaderPrimitiveType::INT, 4},
+	{BTekEngine::ShaderPrimitiveType::VEC2I, 8},
+	{BTekEngine::ShaderPrimitiveType::VEC3I, 12},
+	{BTekEngine::ShaderPrimitiveType::VEC4I, 16},
+	{BTekEngine::ShaderPrimitiveType::MAT2X2F, 16},
+	{BTekEngine::ShaderPrimitiveType::MAT3X3F, 36},
+	{BTekEngine::ShaderPrimitiveType::MAT4X4F, 64},
+};
+
+int BTekEngine::GfxGetShaderPrimitiveSize(ShaderPrimitiveType type) {
+	return shader_var_sizes.at(type);
+}

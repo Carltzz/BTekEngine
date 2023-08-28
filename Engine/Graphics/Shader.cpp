@@ -38,6 +38,28 @@ bool BTekEngine::Shader::SetComputeStage(const char* src) {
 	return m_gfxApi->CompileShaderStage(m_gfxComputeShader, src);
 }
 
+int BTekEngine::Shader::AddShaderVariable(ShaderPrimitiveType type, const std::string& name, int size) {
+	ShaderVariable* variable = new ShaderVariable(
+		m_gfxShaderId,
+		type,
+		name,
+		size
+	);
+	m_shaderVariables.insert({ variable->GetLocation(), variable });
+	return variable->GetLocation();
+}
+
+void BTekEngine::Shader::UpdateShaderVariable(int id, void* data, int start, int size) {
+	ShaderVariable* var = m_shaderVariables.at(id);
+	var->UpdateData(data, start, size);
+}
+
+void BTekEngine::Shader::DeleteShaderVariable(int id) {
+	ShaderVariable* var = m_shaderVariables.at(id);
+	m_shaderVariables.erase(id);
+	delete var;
+}
+
 bool BTekEngine::Shader::Compile() {
 	m_hasCompiled = m_gfxApi->CompileShader(m_gfxShaderId,
 		{

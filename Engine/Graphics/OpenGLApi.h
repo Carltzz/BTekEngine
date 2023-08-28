@@ -34,6 +34,23 @@ namespace BTekEngine {
 		void DrawMesh(int meshId, int startVertex, int count) override; 
 		void DrawIndexedMesh(int meshId, int indexBufferId, int startIndex, int count) override;
 
+		int DefineShaderVariable(
+			int shaderId,
+			ShaderPrimitiveType type,
+			const std::string& name,
+			int size) override;
+
+		void UpdateShaderVariable(
+			int shaderId,
+			ShaderPrimitiveType type,
+			int location,
+			void* data, 
+			int dstOffset, 
+			int size) override;
+
+		void DeleteShaderVariable(
+			ShaderPrimitiveType type,
+			int id) override;
 
 		void LoadCoreShaders();
 		void CleanUp();

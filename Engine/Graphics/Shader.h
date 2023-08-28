@@ -1,5 +1,8 @@
 #pragma once
 #include "GraphicsApi.h"
+#include "ShaderVariable.h"
+#include <map>
+#include <vector>
 
 namespace BTekEngine {
 	class Shader : public GfxApiObject {
@@ -12,6 +15,10 @@ namespace BTekEngine {
 		bool SetGeometryStage(const char* src);
 		bool SetPixelStage(const char* src);
 		bool SetComputeStage(const char* src);
+
+		int AddShaderVariable(ShaderPrimitiveType type, const std::string& name, int size = -1);
+		void UpdateShaderVariable(int id, void* data, int start, int size = -1);
+		void DeleteShaderVariable(int id);
 
 		bool Compile();
 		void Activate();
@@ -31,5 +38,7 @@ namespace BTekEngine {
 		int m_gfxComputeShader = -1;
 
 		void m_deleteShaderCache();
+
+		std::map<int, ShaderVariable*> m_shaderVariables = std::map<int, ShaderVariable*>();
 	};
 }
