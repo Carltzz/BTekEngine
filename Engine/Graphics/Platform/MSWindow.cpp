@@ -99,22 +99,50 @@ WIN_RETURN_STATUS BTekEngine::MSWindow::Run() {
 
 	Vector3<float> vertices[] = {
 		{ -0.5f, -0.5f, 0.0f },
-		{ 0.5f , -0.5f, 0.0f },
-		{ 0.0f, 0.5f, 0.0f },
+		{ -0.5f , 0.5f, 0.0f },
+		{ 0.5f, 0.5f, 0.0f },
+		{ 0.5f, -0.5f, 0.0f },
 	};
 
-	int indices[] = { 0, 1, 2 };
+	int indices[] = { 0, 1, 2, 2, 0, 3 };
 
-	VertexBuffer* vertexBuffer = new VertexBuffer(sizeof(vertices), &vertices[0], 3);
-	IndexBuffer* indexBuffer = new IndexBuffer(sizeof(indices), &indices[0], 3);
+	Vector2<float> uvs[]{
+		{ 0.0f, 1.0f },
+		{ 0.0f, 0.0f },
+		{ 1.0f, 0.0f },
+		{ 1.0f, 1.0f },
+	};
+
+	Vector4<unsigned char> texture[] = {
+		// Red                      Green
+		{ 255, 0, 0, 255 }, { 0, 255, 0, 255 },
+		// Blue                     Cyan
+		{ 0, 0, 255, 255 }, { 0, 255, 255, 255 }
+	};
+
+	Texture2D* tex2D = new Texture2D(2, 2);
+	tex2D->SetPixels(&texture[0]);
+
+	VertexBuffer* vertexBuffer = new VertexBuffer(sizeof(vertices), &vertices[0], 4);
+	VertexBuffer* uvBuffer = new VertexBuffer(sizeof(uvs), &uvs[0], 4);
+	IndexBuffer* indexBuffer = new IndexBuffer(sizeof(indices), &indices[0], 6);
 	StaticMesh* mesh = new StaticMesh();
+
 	MeshAttribDescriptor vertexBufferDesc = {
 		vertexBuffer->GetID(),
 		MeshAttribute::POSITION,
-		3, 0, 3
+		3, 0, 0
+	};
+
+	MeshAttribDescriptor uvBufferDesc = {
+		uvBuffer->GetID(),
+		MeshAttribute::UV,
+		2, 0, 0
 	};
 
 	mesh->SetVertices(vertexBuffer, vertexBufferDesc);
+	mesh->SetUVs(uvBuffer, uvBufferDesc);
+	mesh->SetTexture(tex2D);
 	mesh->SetIndices(indexBuffer);
 
 	MSG msg = { };
@@ -161,7 +189,7 @@ void BTekEngine::MSWindow::InitGraphicsApi(void* hWnd) {
 	m_hWnd = (HWND)hWnd;
 	m_gfxApi = BTekEngine::CreateGraphicsApi(this, m_gfxApiType);
 	m_gfxApi->Init();
-	m_gfxApi->SetClearColor(0.0, 1.0, 0.0);
+	m_gfxApi->SetClearColor(0.0, 0.0, 0.0);
 	m_gfxApi->SetViewport(0, 0, m_width, m_height);
 }
 

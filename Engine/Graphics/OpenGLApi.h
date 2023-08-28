@@ -52,6 +52,15 @@ namespace BTekEngine {
 			ShaderPrimitiveType type,
 			int id) override;
 
+		int CreateTexture2D(int width, int height) override;
+		void SetTexture2DPixels(
+			int textureId,
+			int sx, int sy,
+			int width, int height,
+			void* data) override;
+		void ActivateTexture2D(int textureId) override;
+		void DeleteTexture2D(int id) override;
+
 		void LoadCoreShaders();
 		void CleanUp();
 	};

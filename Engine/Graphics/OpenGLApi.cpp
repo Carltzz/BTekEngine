@@ -61,17 +61,23 @@ void BTekEngine::OpenGLApi::FinishRender() {
 
 const char* vertexShaderSource = "#version 330 core\n"
 "layout (location = 0) in vec3 aPos;\n"
+"layout (location = 2) in vec2 aTexCoord;\n"
+"out vec2 TexCoord;\n"
 "void main()\n"
 "{\n"
 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"   TexCoord = aTexCoord;\n"
 "}\0";
 
 const char* fragmentShaderSource = "#version 330 core\n"
 "out vec4 FragColor;\n"
+"in vec2 TexCoord;\n"
 "uniform vec4 customColor;\n"
+"uniform sampler2D ourTexture;\n"
 "void main()\n"
 "{\n"
-	"	FragColor = customColor;\n"
+	"	//FragColor = vec4(TexCoord.x, TexCoord.y, 0.0f, 1.0f);\n"
+	"	FragColor = texture(ourTexture, TexCoord);\n"
 "}\0";
 
 void BTekEngine::OpenGLApi::LoadCoreShaders() {
@@ -97,7 +103,7 @@ int BTekEngine::OpenGLApi::AllocateMesh() {
 void BTekEngine::OpenGLApi::SetMeshAttribute(int meshId, MeshAttribDescriptor desc) {
 	glBindVertexArray(meshId);
 	glBindBuffer(GL_ARRAY_BUFFER, (GLuint)desc.BufferId);
-	glVertexAttribPointer((GLuint)desc.Attribute, desc.Size, GL_FLOAT, GL_FALSE, desc.Stride * 4, 0);
+	glVertexAttribPointer((GLuint)desc.Attribute, desc.Components, GL_FLOAT, GL_FALSE, desc.Stride, (void*)(desc.Offset));
 	glEnableVertexAttribArray((GLuint)desc.Attribute);
 }
 
@@ -162,7 +168,7 @@ bool BTekEngine::OpenGLApi::CompileShaderStage(int id, const char* src) {
 
 	if (!success) {
 		glGetShaderInfoLog(id, 512, NULL, infoLog);
-		BTekLogMessage(BTekEngine::LogLevel::ERR, "Failed to load fragment shader id:", id);
+		BTekLogMessage(BTekEngine::LogLevel::ERR, "Failed to load shader stage:", src);
 		BTekLogMessage(BTekEngine::LogLevel::ERR, infoLog);
 	}
 
@@ -323,6 +329,32 @@ void BTekEngine::OpenGLApi::DeleteShaderVariable(
 	if (type == ShaderPrimitiveType::STRUCT) {
 		glDeleteBuffers(1, &glId);
 	}
+}
+
+int BTekEngine::OpenGLApi::CreateTexture2D(int width, int height) {
+	GLuint id;
+	glGenTextures(1, &id);
+	glBindTexture(GL_TEXTURE_2D, id);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	return id;
+}
+
+void BTekEngine::OpenGLApi::SetTexture2DPixels(int textureId, int sx, int sy, int width, int height, void* data) {
+	glBindTexture(GL_TEXTURE_2D, textureId);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, sx, sy, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+}
+
+void BTekEngine::OpenGLApi::ActivateTexture2D(int textureId) {
+	glBindTexture(GL_TEXTURE_2D, textureId);
+}
+
+void BTekEngine::OpenGLApi::DeleteTexture2D(int textureId) {
+	GLuint id;
+	glDeleteTextures(1, &id);
 }
 
 void BTekEngine::OpenGLApi::CleanUp() {

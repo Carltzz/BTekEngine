@@ -10,7 +10,18 @@ BTekEngine::StaticMesh::StaticMesh() :
 
 void BTekEngine::StaticMesh::SetVertices(VertexBuffer* buffer, MeshAttribDescriptor desc) {
 	m_gfxApi->SetMeshAttribute(m_gfxApiHandle, desc);
+	m_pVertices = buffer;
 	m_drawElementCount = buffer->GetElementCount();
+}
+
+void BTekEngine::StaticMesh::SetUVs(VertexBuffer* buffer, MeshAttribDescriptor desc) {
+	m_gfxApi->SetMeshAttribute(m_gfxApiHandle, desc);
+	m_pUVs = buffer;
+}
+
+void BTekEngine::StaticMesh::SetTexture(Texture2D* texture) {
+	m_mainTexture = texture;
+	m_hasTexture = (m_mainTexture != 0);
 }
 
 void BTekEngine::StaticMesh::SetIndices(IndexBuffer* indexBuffer) {
@@ -20,6 +31,9 @@ void BTekEngine::StaticMesh::SetIndices(IndexBuffer* indexBuffer) {
 }
 
 void BTekEngine::StaticMesh::Render() {
+	if (m_hasTexture) {
+		m_gfxApi->ActivateTexture2D(m_mainTexture->GetID());
+	}
 	if (m_usesIndices) {
 		m_gfxApi->DrawIndexedMesh(
 			m_gfxApiHandle, 

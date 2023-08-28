@@ -54,7 +54,7 @@ namespace BTekEngine {
 		MeshAttribute Attribute;
 		int Components;
 		int Stride;
-		int Size;
+		int Offset;
 	};
 
 	class GraphicsApi {
@@ -109,6 +109,14 @@ namespace BTekEngine {
 		virtual void DeleteShaderVariable(
 			ShaderPrimitiveType type,
 			int id) = 0;
+
+		virtual int CreateTexture2D(int width, int height) = 0;
+		virtual void SetTexture2DPixels(int textureId, 
+			int sx, int sy, 
+			int width, int height,
+			void* data) = 0;
+		virtual void ActivateTexture2D(int textureId) = 0;
+		virtual void DeleteTexture2D(int id) = 0;
 
 	protected:
 		void* m_pWindow;
